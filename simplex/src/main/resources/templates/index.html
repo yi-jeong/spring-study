@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>단방향 테스트</title>
+    <script>
+        function like(likeSeq, type) {
+            switch (type){
+                case "poll":
+                    return fetch(`/poll/like?likeSeq=${likeSeq}`, { method: 'POST' })
+                        .then(response => response.text())
+                        .then(data => {
+                            document.getElementById('likeCount').innerText = data;
+                        });
+                case "long":
+                    return fetch(`/long/like?likeSeq=${likeSeq}`, { method: 'POST' })
+                        .then(response => response.text())
+                        .then(data => {
+                            document.getElementById('likeCount').innerText = data;
+                        });
+                case "sse":
+                    return fetch(`/sse/like?likeSeq=${likeSeq}`, { method: 'POST' })
+                        .then(response => response.text())
+                        .then(data => {
+                            document.getElementById('likeCount').innerText = data;
+                        });
+                default:
+            }
+        }
+
+        function startPolling(likeSeq) {
+            setInterval(() => {
+                fetch(`/poll/like?likeSeq=${likeSeq}`)
+                    .then(response => response.text())
+                    .then(data => {
+                        document.getElementById('likeCount').innerText = data;
+                    });
+            }, 5000);
+        }
+
+        function startLongPolling(likeSeq) {
+            function longPoll() {
+                fetch(`/long/like?likeSeq=${likeSeq}`)
+                    .then(response => response.text())
+                    .then(data => {
+                        document.getElementById('likeCount').innerText = data;
+                        longPoll();
+                    });
+            }
+
+            longPoll();
+        }
+
+        function startSSE(likeSeq) {
+            const eventSource = new EventSource(`/sse/like?likeSeq=${likeSeq}`);
+            eventSource.onmessage = function(event) {
+                document.getElementById('likeCount').innerText = event.data;
+            };
+        }
+    </script>
+</head>
+<body>
+<h1>Like Button Example</h1>
+<div>
+    <button onclick="like(1, 'poll')">Like (Polling)</button>
+    <button onclick="like(1, 'long')">Like (Long Polling)</button>
+    <button onclick="like(1, 'sse')">Like (SSE)</button>
+</div>
+<div>
+    <h3>Like Count: <span id="likeCount">0</span></h3>
+</div>
+<script th:inline="javascript">
+    const likeSeq = 1;
+
+    // startPolling(likeSeq);
+    startLongPolling(likeSeq);
+    // startSSE(likeSeq);
+</script>
+</body>
+</html>
