@@ -11,39 +11,23 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ comment: content })
-            })
-                .then(response => response.text())
+                body: JSON.stringify({ content })
+            }).then(response => response.json())
                 .then(data => {
                     document.getElementById('commentContent').value = '';
                     alert('댓글이 추가되었습니다.');
-                })
-                .catch(error => console.error('Error:', error));
+                });
         }
 
         function startSSE(userId) {
-            const eventSource = new EventSource(`/comments/subscribe?userId=${userId}`);
+            const eventSource = new EventSource(`/users/${userId}/subscribe`);
             eventSource.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 const commentList = document.getElementById('comments');
                 const commentItem = document.createElement('li');
-
-                console.log(event);
-
-                commentItem.innerText = `댓글: ${data.comment}`;
+                commentItem.innerText = `댓글: ${data.content} (포스트 ID: ${data.post.id})`;
                 commentList.appendChild(commentItem);
             };
-
-            eventSource.addEventListener('newComment', function(event) {
-                const data = JSON.parse(event.data);
-                const commentList = document.getElementById('comments');
-                const commentItem = document.createElement('li');
-
-                console.log("aaa " + event);
-
-                commentItem.innerText = `댓글: ${data.comment}`;
-                commentList.appendChild(commentItem);
-            });
         }
     </script>
 </head>
@@ -58,8 +42,8 @@
     <h2>실시간 댓글 알림</h2>
     <ul id="comments"></ul>
 </div>
-<script>
-    const userId = 1; // 실제로 사용자가 로그인했을 때의 userId로 설정
+<script th:inline="javascript">
+    const userId = 1;  // 서버에서 유저 ID를 넣어줍니다
     startSSE(userId);
 </script>
 </body>
