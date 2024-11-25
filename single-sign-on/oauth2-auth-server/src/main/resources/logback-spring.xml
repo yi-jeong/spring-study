@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<!-- LOG 파일 절대 경로  -->
+	<property name="LOGS_ABSOLUTE_PATH" value="/application/single-sign-on/log"/>
+
+	<!-- console log -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+      		<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n</pattern>
+    	</encoder>
+	</appender>
+
+	<!-- file log -->
+	<appender name="DAILY_ROLLING_FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGS_ABSOLUTE_PATH}/spring.log</file>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+	      <!-- rollover daily -->
+	      <fileNamePattern>${LOGS_ABSOLUTE_PATH}/spring.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+	       <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
+	       <maxFileSize>100MB</maxFileSize>
+	       <maxHistory>30</maxHistory>
+	       <totalSizeCap>20GB</totalSizeCap>
+	    </rollingPolicy>
+	</appender>
+
+	<!-- jpa query logging -->
+	<springProfile name="local, dev">
+		<logger name="org.hibernate.SQL" level="TRACE" additivity="false">
+			<appender-ref ref="DAILY_ROLLING_FILE_APPENDER"/>
+			<appender-ref ref="STDOUT"/>
+		</logger>
+	</springProfile>
+
+	<!-- jpa query parameter logging -->
+	<springProfile name="local, dev">
+		<logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+			<appender-ref ref="DAILY_ROLLING_FILE_APPENDER"/>
+			<appender-ref ref="STDOUT"/>
+		</logger>
+	</springProfile>
+
+	<!-- HikariPool  logging-->
+	<logger name="com.zaxxer.hikari.pool.HikariPool" level="TRACE" additivity="false">
+		<appender-ref ref="DAILY_ROLLING_FILE_APPENDER"/>
+		<appender-ref ref="STDOUT"/>
+	</logger>
+
+	<!-- LEVEL : TRACE > DEBUG > INFO > WARN > ERROR -->
+	<root level="INFO">
+		<appender-ref ref="DAILY_ROLLING_FILE_APPENDER"/>
+		<appender-ref ref="STDOUT"/>
+	</root>
+</configuration>
